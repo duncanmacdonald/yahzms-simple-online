@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yahzms Online</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="conn-pill" class="conn-pill">Connecting…</div>
+
+<h1 class="logo">Yahzms</h1>
+<p class="tagline">Five dice. Thirteen rounds. Nae scrubs.</p>
+
+<!-- ============ LOBBY ============ -->
+<div id="screen-lobby" class="screen active">
+  <div class="lobby-card">
+    <h2>Who's playing?</h2>
+    <p class="hint">2–4 players. Share this page's link — everyone joins from their own device.</p>
+    <div class="name-row" id="join-row">
+      <input id="name-input" type="text" maxlength="3" pattern="[A-Za-z]{1,3}" placeholder="Enter 3 initials" autocomplete="off">
+      <button id="btn-add" class="btn-add">Join</button>
+    </div>
+    <p id="join-error" class="join-error"></p>
+    <ul id="player-list" class="player-list"></ul>
+    <button id="btn-start" class="btn-start" disabled>Start Game</button>
+    <p id="lobby-note" class="lobby-note">The first player to join becomes the host and starts the game.</p>
+  </div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div id="screen-game" class="screen">
+  <div class="game-wrap">
+    <div class="turn-banner">
+      <span id="turn-text"></span>
+      <span class="round" id="turn-round"></span>
+    </div>
+    <div class="dice-panel">
+      <div class="dice-row" id="dice-row"></div>
+      <div class="hold-hint" id="hold-hint"></div>
+      <button id="btn-roll" class="btn-roll">Roll Dice</button>
+      <div class="rolls-left" id="rolls-left"></div>
+      <div class="joker-note" id="joker-note"></div>
+    </div>
+    <div class="scorecard">
+      <table id="score-table"></table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GAME OVER ============ -->
+<div id="screen-over" class="screen">
+  <div class="gameover-card">
+    <div class="trophy">🏆</div>
+    <h2><span class="winner-name" id="winner-name"></span> wins!</h2>
+    <ol class="ranking" id="ranking"></ol>
+    <button id="btn-again" class="btn-start">Play Again</button>
+  </div>
+</div>
+
+<script src="client.js"></script>
+</body>
+</html>
