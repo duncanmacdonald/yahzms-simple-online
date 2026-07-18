@@ -137,6 +137,7 @@ function handleMessage(msg) {
   if (msg.type !== 'state') return;
   S = msg.state;
   me = msg.you;
+  if (pendingCat && (S.phase !== 'playing' || me !== S.current)) closeConfirm();
   if (msg.event === 'roll') {
     animateRoll(() => renderAll());
   } else {
@@ -358,7 +359,7 @@ function scoreCell(p, pi, cat) {
       td.className = 'potential' + (pts === 0 ? ' zero' : '') + (pi === me ? '' : ' readonly');
       if (pi === me) {
         td.title = `Score ${pts} in ${cat.label}`;
-        td.addEventListener('click', () => send({ type: 'score', catId: cat.id }));
+        td.addEventListener('click', () => openConfirm(cat, pts));
       }
     } else {
       td.className = 'locked-out';
@@ -414,6 +415,34 @@ function renderScorecard() {
 
   table.appendChild(tbody);
 }
+
+// ---------- Score confirm modal ----------
+let pendingCat = null;
+
+function openConfirm(cat, pts) {
+  pendingCat = cat.id;
+  const scrub = pts === 0;
+  $('confirm-card').classList.toggle('scrub', scrub);
+  $('confirm-text').innerHTML = scrub
+    ? `Nae score in <strong>${cat.label}</strong>. Take a <strong>zero</strong> like the scrub ye are?`
+    : `Score <strong>${pts}</strong> point${pts === 1 ? '' : 's'} in <strong>${cat.label}</strong>?`;
+  $('btn-confirm').textContent = scrub ? `Aye, scrub ${cat.label}` : 'Score it';
+  $('confirm-overlay').classList.add('active');
+}
+
+function closeConfirm() {
+  pendingCat = null;
+  $('confirm-overlay').classList.remove('active');
+}
+
+$('btn-confirm').addEventListener('click', () => {
+  if (pendingCat) send({ type: 'score', catId: pendingCat });
+  closeConfirm();
+});
+$('btn-cancel').addEventListener('click', closeConfirm);
+$('confirm-overlay').addEventListener('click', e => {
+  if (e.target === $('confirm-overlay')) closeConfirm();
+});
 
 // ---------- Game over ----------
 function renderGameOver() {

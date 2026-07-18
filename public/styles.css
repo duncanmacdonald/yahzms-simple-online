@@ -418,3 +418,71 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
   background: transparent;
   font-weight: normal;
 }
+
+/* ---------- Score confirm modal ---------- */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 20;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.confirm-overlay.active { display: flex; }
+.confirm-card {
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+}
+.confirm-card p {
+  font-size: 1.15rem;
+  margin-bottom: 20px;
+}
+.confirm-card p strong { color: var(--accent); }
+.confirm-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-cancel {
+  width: 100%;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px;
+  font-size: 0.95rem;
+  border: 2px solid var(--line);
+}
+.btn-cancel:hover { background: var(--cream-dim); color: var(--ink); }
+
+/* SCRUB variant: confirming a zero score */
+.scrub-stamp {
+  display: none;
+  font-family: 'Familjen Grotesk', sans-serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+  border: 4px solid var(--accent);
+  border-radius: 8px;
+  padding: 2px 18px;
+  margin: 0 auto 18px;
+  width: fit-content;
+  transform: rotate(-8deg);
+  text-transform: uppercase;
+}
+.confirm-card.scrub .scrub-stamp {
+  display: block;
+  animation: stamp 0.25s ease-out;
+}
+.confirm-card.scrub { border: 3px dashed var(--accent); }
+@keyframes stamp {
+  0% { transform: rotate(-8deg) scale(2.2); opacity: 0; }
+  100% { transform: rotate(-8deg) scale(1); opacity: 1; }
+}

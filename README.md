@@ -23,3 +23,14 @@ npm start
 ```
 
 Then open http://localhost:3000 in two or more browser windows.
+
+## Deploy to Render
+
+1. Push this repo to GitHub.
+2. On [Render](https://render.com): **New → Blueprint**, connect the repo.
+   `render.yaml` configures the free-tier Node web service automatically.
+3. Share the resulting URL with your players.
+
+Note: on the free tier, Render spins the server down after ~15 minutes of
+inactivity. The first visit after that takes ~30–60 seconds to wake up, and
+any game in progress is lost (state is in memory only).
