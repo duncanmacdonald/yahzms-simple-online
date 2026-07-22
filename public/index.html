@@ -37,8 +37,17 @@
 <div id="screen-game" class="screen">
   <div class="game-wrap">
     <div class="turn-banner">
-      <span id="turn-text"></span>
-      <span class="round" id="turn-round"></span>
+      <div class="banner-slot banner-left">
+        <span id="roll-notice" class="roll-notice"></span>
+      </div>
+      <div class="banner-center">
+        <span id="turn-text"></span>
+        <span class="round" id="turn-round"></span>
+      </div>
+      <div class="banner-slot banner-right">
+        <button class="emote-btn" data-emoji="🎉" aria-label="Celebrate">🎉</button>
+        <button class="emote-btn" data-emoji="🙈" aria-label="Cover eyes">🙈</button>
+      </div>
     </div>
     <div class="dice-panel">
       <div class="dice-row" id="dice-row"></div>
@@ -61,6 +70,16 @@
     <ol class="ranking" id="ranking"></ol>
     <button id="btn-again" class="btn-start">Play Again</button>
   </div>
+</div>
+
+<!-- ============ EMOJI RAIN ============ -->
+<div id="emoji-rain" class="emoji-rain" aria-hidden="true"></div>
+
+<!-- ============ YAHTZEE CELEBRATION ============ -->
+<div id="celebrate" class="celebrate" aria-hidden="true">
+  <div class="celebrate-flash" id="celebrate-flash"></div>
+  <img class="celebrate-hero" id="celebrate-hero" src="yahzms-celebrate.png" alt="">
+  <img class="celebrate-slogan" id="celebrate-slogan" src="yahzms-logo.png" alt="">
 </div>
 
 <!-- ============ SCORE CONFIRM ============ -->

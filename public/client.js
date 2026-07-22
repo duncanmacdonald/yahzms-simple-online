@@ -134,10 +134,12 @@ function handleMessage(msg) {
     showJoinError(msg.message);
     return;
   }
+  if (msg.type === 'emote') { rainEmoji(msg.emoji); return; }
   if (msg.type !== 'state') return;
   S = msg.state;
   me = msg.you;
   if (pendingCat && (S.phase !== 'playing' || me !== S.current)) closeConfirm();
+  if (msg.celebrate) celebrateYahtzee(msg.celebrate);
   if (msg.event === 'roll') {
     animateRoll(() => renderAll());
   } else {
@@ -238,10 +240,38 @@ function myTurn() {
 
 function renderGame() {
   renderBanner();
+  renderNotice();
   renderDice();
   renderHoldHint();
   renderControls();
   renderScorecard();
+}
+
+const CAT_LABEL = Object.fromEntries(ALL_CATS.map(c => [c.id, c.label]));
+let lastNoticeKey = null;
+
+function renderNotice() {
+  const el = $('roll-notice');
+  const n = S.lastScore;
+  if (!n) {
+    el.textContent = '';
+    el.classList.remove('roll-in');
+    lastNoticeKey = null;
+    return;
+  }
+  const label = CAT_LABEL[n.catId] || n.catId;
+  const verb = n.zero ? 'Scrubbed' : 'Rolled';
+  el.innerHTML =
+    `<span class="rn-name">${escapeHtml(n.name)}</span>` +
+    `<span class="rn-msg">${verb} ${escapeHtml(label)}</span>`;
+  // Roll the notice in only when it actually changes (new score committed).
+  const key = `${n.name}|${n.catId}|${n.zero}|${S.turnsTaken}`;
+  if (key !== lastNoticeKey) {
+    lastNoticeKey = key;
+    el.classList.remove('roll-in');
+    void el.offsetWidth;
+    el.classList.add('roll-in');
+  }
 }
 
 function renderBanner() {
@@ -414,6 +444,92 @@ function renderScorecard() {
   tbody.appendChild(totalRow('Grand Total', grandTotal, 'grand'));
 
   table.appendChild(tbody);
+}
+
+// ---------- Emoji reactions ----------
+const EMOTES = ['🎉', '🙈'];
+
+function rainEmoji(emoji) {
+  if (!EMOTES.includes(emoji)) return;
+  const layer = $('emoji-rain');
+  const vw = window.innerWidth;
+  const burst = 5;
+  for (let i = 0; i < burst; i++) {
+    const el = document.createElement('span');
+    el.className = 'emoji-drop';
+    el.textContent = emoji;
+    el.style.fontSize = (26 + Math.random() * 34) + 'px';
+    el.style.left = (Math.random() * vw) + 'px';
+    const dur = 2.4 + Math.random() * 2.2;
+    el.style.animationDuration = dur + 's';
+    el.style.setProperty('--dx', (Math.random() * 120 - 60) + 'px');
+    el.style.setProperty('--drift', (Math.random() * 240 - 120) + 'deg');
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000 + 200);
+  }
+}
+
+document.querySelectorAll('.emote-btn').forEach(btn => {
+  btn.addEventListener('click', () => send({ type: 'emote', emoji: btn.dataset.emoji }));
+});
+
+// ---------- Yahtzee celebration ----------
+// Timeline: rain falls for 2s, then the hero rises; the flash fires at the
+// hero's held peak; finally a big logo bounces in like a slogan.
+const HERO_START = 2000;   // rain-only lead-in
+const FLASH_AT = HERO_START + 1650;   // hero peak + a split-second hold
+const SLOGAN_AT = FLASH_AT + 400;     // just after the flash
+let celebrateTimer = null;
+let flashTimer = null;
+let heroTimer = null;
+let sloganTimer = null;
+
+function restart(el) {
+  el.classList.remove('go');
+  void el.offsetWidth; // force reflow so the animation replays
+  el.classList.add('go');
+}
+
+function celebrateYahtzee(name) {
+  const layer = $('celebrate');
+  layer.classList.add('active');
+  layer.querySelectorAll('.rain-logo').forEach(el => el.remove());
+  // Clear any leftover animation state so a repeat celebration starts clean.
+  $('celebrate-flash').classList.remove('go');
+  $('celebrate-hero').classList.remove('go');
+  $('celebrate-slogan').classList.remove('go');
+  clearTimeout(flashTimer);
+  clearTimeout(heroTimer);
+  clearTimeout(sloganTimer);
+
+  // Rain starts immediately.
+  const count = 42;
+  const vw = window.innerWidth;
+  for (let i = 0; i < count; i++) {
+    const img = document.createElement('img');
+    img.className = 'rain-logo';
+    img.src = 'yahzms-logo.png';
+    img.alt = '';
+    const size = 26 + Math.random() * 78;
+    img.style.width = size + 'px';
+    img.style.left = (Math.random() * vw) + 'px';
+    const dur = 2.2 + Math.random() * 2.8;
+    img.style.animationDuration = dur + 's';
+    img.style.animationDelay = (Math.random() * 1.2) + 's';
+    img.style.opacity = (0.55 + Math.random() * 0.45).toFixed(2);
+    img.style.setProperty('--spin', (Math.random() * 900 - 450) + 'deg');
+    layer.appendChild(img);
+  }
+
+  heroTimer = setTimeout(() => restart($('celebrate-hero')), HERO_START);
+  flashTimer = setTimeout(() => restart($('celebrate-flash')), FLASH_AT);
+  sloganTimer = setTimeout(() => restart($('celebrate-slogan')), SLOGAN_AT);
+
+  clearTimeout(celebrateTimer);
+  celebrateTimer = setTimeout(() => {
+    layer.classList.remove('active');
+    layer.querySelectorAll('.rain-logo').forEach(el => el.remove());
+  }, HERO_START + 4600);
 }
 
 // ---------- Score confirm modal ----------

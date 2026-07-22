@@ -86,6 +86,7 @@ function newGame() {
     dice: [1, 1, 1, 1, 1],
     held: [false, false, false, false, false],
     rollsUsed: 0,
+    lastScore: null,           // { name, catId, zero } — the most recent score
   };
 }
 
@@ -109,6 +110,7 @@ function publicState() {
     dice: game.dice,
     held: game.held,
     rollsUsed: game.rollsUsed,
+    lastScore: game.lastScore,
   };
 }
 
@@ -116,7 +118,7 @@ function indexOfToken(token) {
   return game.players.findIndex(p => p.token === token);
 }
 
-function broadcast(event) {
+function broadcast(event, extra) {
   const state = publicState();
   for (const client of wss.clients) {
     if (client.readyState !== 1) continue;
@@ -125,6 +127,7 @@ function broadcast(event) {
       state,
       you: client.token ? indexOfToken(client.token) : -1,
       event: event || null,
+      ...(extra || {}),
     }));
   }
 }
@@ -183,6 +186,7 @@ function handleStart(ws) {
   game.phase = 'playing';
   game.current = 0;
   game.turnsTaken = 0;
+  game.lastScore = null;
   resetTurn();
   broadcast('start');
 }
@@ -218,21 +222,27 @@ function handleScore(ws, msg) {
   if (p.scores[catId] !== undefined) return;
   const js = jokerState(p, game.dice);
   if (js.allowed !== null && !js.allowed.includes(catId)) return;
-  p.scores[catId] = calcScore(catId, game.dice, js.joker);
+  const pts = calcScore(catId, game.dice, js.joker);
+  p.scores[catId] = pts;
   if (js.bonus) p.yahtzeeBonus += 100;
-  endTurn();
+  game.lastScore = { name: p.name, catId, zero: pts === 0 };
+  // Celebrate when a real Yahtzee is banked: 50 in the Yahtzee box, or a bonus Yahtzee.
+  const celebrated = isYahtzeeRoll(game.dice) &&
+    ((catId === 'yahtzee' && p.scores.yahtzee === 50) || js.bonus);
+  endTurn(celebrated ? p.name : null);
 }
 
-function endTurn() {
+function endTurn(celebrate) {
   game.turnsTaken++;
+  const extra = celebrate ? { celebrate } : null;
   if (game.players.every(cardComplete)) {
     game.phase = 'over';
-    broadcast('over');
+    broadcast('over', extra);
     return;
   }
   game.current = (game.current + 1) % game.players.length;
   resetTurn();
-  broadcast('turn');
+  broadcast('turn', extra);
 }
 
 function handleAgain(ws) {
@@ -244,6 +254,7 @@ function handleAgain(ws) {
   game.phase = 'lobby';
   game.current = 0;
   game.turnsTaken = 0;
+  game.lastScore = null;
   resetTurn();
   broadcast();
 }
@@ -330,6 +341,24 @@ function cancelEmptyReset() {
   if (emptyResetTimer) { clearTimeout(emptyResetTimer); emptyResetTimer = null; }
 }
 
+// ---------- Emoji reactions ----------
+// Anyone connected (players and spectators) can fire these; the server
+// rebroadcasts to everyone so all screens rain the same emoji. A light
+// per-connection throttle caps flooding.
+const EMOTES = new Set(['🎉', '🙈']);
+
+function handleEmote(ws, msg) {
+  const emoji = String(msg.emoji || '');
+  if (!EMOTES.has(emoji)) return;
+  const now = Date.now();
+  if (ws.lastEmote && now - ws.lastEmote < 50) return;
+  ws.lastEmote = now;
+  const payload = JSON.stringify({ type: 'emote', emoji });
+  for (const client of wss.clients) {
+    if (client.readyState === 1) client.send(payload);
+  }
+}
+
 // ---------- Wire it up ----------
 wss.on('connection', ws => {
   ws.isAlive = true;
@@ -346,6 +375,7 @@ wss.on('connection', ws => {
       case 'score': return handleScore(ws, msg);
       case 'again': return handleAgain(ws);
       case 'boot':  return handleBoot(ws, msg);
+      case 'emote': return handleEmote(ws, msg);
     }
   });
   ws.on('close', () => handleClose(ws));

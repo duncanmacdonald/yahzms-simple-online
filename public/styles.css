@@ -143,15 +143,85 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .turn-banner {
   grid-column: 1 / -1;
-  text-align: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   background: rgba(0,0,0,0.25);
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 10px;
   padding: 12px 16px;
-  font-size: 1.2rem;
+  font-size: 1.05rem;
+}
+.banner-slot {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.banner-left { justify-content: flex-start; flex-grow: 1.7; }
+.banner-right { justify-content: flex-end; }
+.banner-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.roll-notice {
+  color: var(--cream);
+  line-height: 1.2;
+  white-space: normal;
+  overflow: hidden;
+  max-width: 100%;
+}
+.roll-notice .rn-name { display: block; font-weight: 400; }
+.roll-notice .rn-msg { display: block; font-weight: 400; opacity: 0.7; }
+.roll-notice.roll-in { animation: notice-roll 0.45s ease-out; }
+@keyframes notice-roll {
+  0%   { opacity: 0; transform: translateY(-100%); }
+  60%  { opacity: 0.9; }
+  100% { opacity: 0.9; transform: translateY(0); }
 }
 .turn-banner .who { color: var(--gold); font-weight: bold; }
-.turn-banner .round { opacity: 0.7; font-size: 0.9rem; display: block; margin-top: 2px; }
+.turn-banner .round { opacity: 0.7; display: block; margin-top: 2px; }
+
+.emote-btn {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 6px 9px;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+}
+.emote-btn:hover { background: rgba(255,255,255,0.2); }
+.emote-btn:active { transform: scale(0.82); }
+
+/* ---------- Emoji rain (player reactions) ---------- */
+.emoji-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: none;
+}
+.emoji-drop {
+  position: absolute;
+  top: -60px;
+  will-change: transform;
+  animation: emoji-fall linear forwards;
+  user-select: none;
+}
+@keyframes emoji-fall {
+  0%   { transform: translate(0, -60px) rotate(0deg); opacity: 0; }
+  8%   { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate(var(--dx, 0), 110vh) rotate(var(--drift, 0deg)); opacity: 0; }
+}
 
 /* ---------- Dice panel ---------- */
 .dice-panel {
@@ -485,4 +555,80 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 @keyframes stamp {
   0% { transform: rotate(-8deg) scale(2.2); opacity: 0; }
   100% { transform: rotate(-8deg) scale(1); opacity: 1; }
+}
+
+/* ---------- Yahtzee celebration ---------- */
+.celebrate {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  pointer-events: none;
+}
+.celebrate.active { display: block; }
+
+.celebrate-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+}
+.celebrate-flash.go { animation: cam-flash 0.5s ease-out; }
+@keyframes cam-flash {
+  0%   { opacity: 0; }
+  10%  { opacity: 0.97; }
+  100% { opacity: 0; }
+}
+
+.rain-logo {
+  position: absolute;
+  top: -120px;
+  will-change: transform;
+  animation: rain-fall linear forwards;
+}
+@keyframes rain-fall {
+  0%   { transform: translateY(-120px) rotate(0deg); }
+  100% { transform: translateY(115vh) rotate(var(--spin, 360deg)); }
+}
+
+.celebrate-hero {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: min(74vw, 440px);
+  transform: translate(-50%, 115%);
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+}
+.celebrate-hero.go {
+  animation: hero-rise 4.4s ease-in-out forwards;
+}
+@keyframes hero-rise {
+  0%   { transform: translate(-50%, 115%); }
+  30%  { transform: translate(-50%, 25%); }
+  55%  { transform: translate(-50%, 25%); }
+  100% { transform: translate(-50%, 115%); }
+}
+
+.celebrate-slogan {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: min(82vw, 520px);
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0;
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
+}
+.celebrate-slogan.go { animation: slogan-pop 0.85s cubic-bezier(0.3, 1.4, 0.5, 1) forwards; }
+@keyframes slogan-pop {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+  55%  { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
+  75%  { transform: translate(-50%, -50%) scale(0.94); }
+  90%  { transform: translate(-50%, -50%) scale(1.04); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rain-logo { display: none; }
+  .celebrate-hero.go, .celebrate-flash.go, .celebrate-slogan.go { animation-duration: 1s; }
 }
